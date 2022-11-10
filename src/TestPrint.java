@@ -24,7 +24,7 @@ public class TestPrint {
 
         images.add(generateImage("Image 1", imgWidth, imgHeight));
         images.add(generateImage("Image 2", imgWidth, imgHeight));
-        images.add(generateImage("Image 3", imgHeight,imgWidth));
+        images.add(generateImage("Image 3", imgHeight, imgWidth));
         images.add(generateImage("Image 4", imgHeight, imgWidth));
 
         pages.add(generatePage(imgWidth, imgHeight, PageFormat.LANDSCAPE));
@@ -33,9 +33,9 @@ public class TestPrint {
         pages.add(generatePage(imgHeight, imgWidth, PageFormat.PORTRAIT));
 
 //        displayImg(images.get(3));
-        for (int i = 0; i < 4; i++) saveImg(images.get(i), "image" + (i + 1));
+//        for (int i = 0; i < 4; i++) saveImg(images.get(i), "image" + (i + 1));
         //On JDK 11 this property 'fixes' the issue by forcing the use of PSPrinterJob
-//        System.setProperty("java.awt.printerjob", "sun.print.PSPrinterJob");
+        System.setProperty("java.awt.printerjob", "sun.print.PSPrinterJob");
         new TestPrint().print();
     }
 
@@ -43,6 +43,7 @@ public class TestPrint {
         Path p = Paths.get("./" + filename + ".png");
         ImageIO.write(img, "png", p.toFile());
     }
+
     private static void displayImg(BufferedImage img) {
         Image scaledImg = img.getScaledInstance(
                 img.getWidth() * displayScaleFactor,
@@ -134,14 +135,29 @@ public class TestPrint {
         @Override
         public int print(Graphics g, PageFormat pageFormat, int pageIndex) {
 //            pageFormat.setOrientation(PageFormat.PORTRAIT);
-            g.drawImage(
-                    image,
-                    (int) pageFormat.getImageableX(),
-                    (int) pageFormat.getImageableY(),
-                    image.getWidth(),
-                    image.getHeight(),
-                    null
-            );
+            int x, y, w, h;
+            if (pageFormat.getOrientation() == PageFormat.LANDSCAPE) {
+                x = (int) pageFormat.getImageableY();
+                y = (int) pageFormat.getImageableX();
+                w = image.getHeight();
+                h = image.getWidth();
+                if (pageIndex == 0) {
+                    BufferedImage rotated = new BufferedImage(h, w, image.getType());
+                    Graphics2D graphic = rotated.createGraphics();
+                    graphic.drawImage(image, null, 0, 0);
+                    graphic.rotate(Math.toRadians(90), h / 2, w / 2);
+                    graphic.dispose();
+                    image = rotated;
+                    displayImg(rotated);
+                }
+            } else {
+                x = (int) pageFormat.getImageableX();
+                y = (int) pageFormat.getImageableY();
+                w = image.getWidth();
+                h = image.getHeight();
+            }
+            g.rotate(Math.toRadians(90), h / 2, w / 2);
+            g.drawImage(image, x, y, w, h, null);
             return PAGE_EXISTS;
         }
     }
