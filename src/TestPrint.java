@@ -117,26 +117,25 @@ public class TestPrint {
 
         Book book = new Book();
         for (int n = 0; n < 4; n++) {
-            book.append(new ImagePrintable(pages.get(n), images.get(n)), pages.get(n));
+            book.append(new ImagePrintable(pages.get(n), images.get(n), n), pages.get(n));
         }
         job.setPageable(book);
-        HashPrintRequestAttributeSet attributes = new HashPrintRequestAttributeSet();
-        attributes.add(new MediaPrintableArea(0f, 0f, imgWidth*.5f/72f, imgHeight/72f, MediaPrintableArea.INCH));
         job.print();
     }
 
     private class ImagePrintable implements Printable {
         private BufferedImage image;
+        private int pageNumber;
 
-        public ImagePrintable(PageFormat page, BufferedImage image) {
+        public ImagePrintable(PageFormat page, BufferedImage image, int pageNumber) {
             this.image = image;
+            this.pageNumber = pageNumber;
         }
 
         @Override
         public int print(Graphics g, PageFormat pageFormat, int pageIndex) {
-//            pageFormat.setOrientation(PageFormat.PORTRAIT);
-            int x, y, w, h;
-            if (pageFormat.getOrientation() == PageFormat.LANDSCAPE) {
+            if (pageNumber != pageIndex) return NO_SUCH_PAGE;
+            if (pageIndex < 3) {
                 Graphics2D g2d = (Graphics2D)g;
                 g2d.rotate(Math.toRadians(90), 0, 0);
                 g2d.translate(0, -image.getHeight());
