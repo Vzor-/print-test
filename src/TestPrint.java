@@ -1,14 +1,10 @@
 import javax.imageio.ImageIO;
 import javax.print.*;
-import javax.print.attribute.HashPrintRequestAttributeSet;
-import javax.print.attribute.standard.MediaPrintableArea;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.awt.image.ImageObserver;
 import java.awt.print.*;
 import java.io.*;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -22,10 +18,10 @@ public class TestPrint {
 
     public static void main(String[] args) throws Exception {
 
-        images.add(generateImage("Image 1", imgWidth, imgHeight));
-        images.add(generateImage("Image 2", imgWidth, imgHeight));
-        images.add(generateImage("Image 3", imgHeight, imgWidth));
-        images.add(generateImage("Image 4", imgHeight, imgWidth));
+//        images.add(generateImage("Image 1", imgWidth, imgHeight));
+//        images.add(generateImage("Image 2", imgWidth, imgHeight));
+//        images.add(generateImage("Image 3", imgHeight, imgWidth));
+//        images.add(generateImage("Image 4", imgHeight, imgWidth));
 
         pages.add(generatePage(imgWidth, imgHeight, PageFormat.LANDSCAPE));
         pages.add(generatePage(imgWidth, imgHeight, PageFormat.PORTRAIT));
@@ -98,51 +94,53 @@ public class TestPrint {
     }
 
     private static PageFormat generatePage(int width, int height, int orientation) {
-        PageFormat page = new PageFormat();
+        PageFormat page = new PageFormatFix();
         page.setOrientation(orientation);
 
         Paper paper = page.getPaper();
         paper.setSize(width, height);
         paper.setImageableArea(0, 0, width, height);
-        paper.setSize(width, height);
 
         page.setPaper(paper);
         return page;
     }
 
-    public void print() throws PrinterException, PrintException, IOException {
+    public void print() throws PrinterException {
         PrinterJob job = PrinterJob.getPrinterJob();
         PrintService printService = PrintServiceLookup.lookupDefaultPrintService();
         job.setPrintService(printService);
 
         Book book = new Book();
         for (int n = 0; n < 4; n++) {
-            book.append(new ImagePrintable(pages.get(n), images.get(n), n), pages.get(n));
+            book.append(new ImagePrintable(), pages.get(n));
         }
         job.setPageable(book);
         job.print();
     }
 
     private class ImagePrintable implements Printable {
-        private BufferedImage image;
-        private int pageNumber;
 
-        public ImagePrintable(PageFormat page, BufferedImage image, int pageNumber) {
-            this.image = image;
-            this.pageNumber = pageNumber;
+        public ImagePrintable() {
         }
 
         @Override
         public int print(Graphics g, PageFormat pageFormat, int pageIndex) {
-            if (pageNumber != pageIndex) return NO_SUCH_PAGE;
-            if (pageIndex < 3) {
+            PageFormatFix pageFormatFix = (PageFormatFix) pageFormat;
+            if (pageFormatFix.needsRotation()) {
                 Graphics2D g2d = (Graphics2D)g;
-                g2d.rotate(Math.toRadians(90), 0, 0);
-                g2d.translate(0, -image.getHeight());
-                g2d.drawImage(image, 0, 0, image.getWidth(), image.getHeight(), null);
-            } else {
-                g.drawImage(image, 0, 0, image.getWidth(), image.getHeight(), null);
+                //todo imageable x,y should likely be used instead of 0,0
+                g2d.rotate(Math.toRadians(-90), 0, 0);
+                g2d.translate(-pageFormatFix.getHeight(),0);
             }
+            g.drawImage(
+                    //todo imageable x,y should likely be used instead of 0,0
+                    generateImage("image" + pageIndex, g.getClipBounds().width, g.getClipBounds().height),
+                    0,
+                    0,
+                    g.getClipBounds().width,
+                    g.getClipBounds().height,
+                    null
+            );
             return PAGE_EXISTS;
         }
     }
