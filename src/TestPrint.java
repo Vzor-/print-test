@@ -35,7 +35,7 @@ public class TestPrint {
 //        displayImg(images.get(3));
 //        for (int i = 0; i < 4; i++) saveImg(images.get(i), "image" + (i + 1));
         //On JDK 11 this property 'fixes' the issue by forcing the use of PSPrinterJob
-        System.setProperty("java.awt.printerjob", "sun.print.PSPrinterJob");
+//        System.setProperty("java.awt.printerjob", "sun.print.PSPrinterJob");
         new TestPrint().print();
     }
 
@@ -137,27 +137,13 @@ public class TestPrint {
 //            pageFormat.setOrientation(PageFormat.PORTRAIT);
             int x, y, w, h;
             if (pageFormat.getOrientation() == PageFormat.LANDSCAPE) {
-                x = (int) pageFormat.getImageableY();
-                y = (int) pageFormat.getImageableX();
-                w = image.getHeight();
-                h = image.getWidth();
-                if (pageIndex == 0) {
-                    BufferedImage rotated = new BufferedImage(h, w, image.getType());
-                    Graphics2D graphic = rotated.createGraphics();
-                    graphic.drawImage(image, null, 0, 0);
-                    graphic.rotate(Math.toRadians(90), h / 2, w / 2);
-                    graphic.dispose();
-                    image = rotated;
-                    displayImg(rotated);
-                }
+                Graphics2D g2d = (Graphics2D)g;
+                g2d.rotate(Math.toRadians(90), 0, 0);
+                g2d.translate(0, -image.getHeight());
+                g2d.drawImage(image, 0, 0, image.getWidth(), image.getHeight(), null);
             } else {
-                x = (int) pageFormat.getImageableX();
-                y = (int) pageFormat.getImageableY();
-                w = image.getWidth();
-                h = image.getHeight();
+                g.drawImage(image, 0, 0, image.getWidth(), image.getHeight(), null);
             }
-            g.rotate(Math.toRadians(90), h / 2, w / 2);
-            g.drawImage(image, x, y, w, h, null);
             return PAGE_EXISTS;
         }
     }
