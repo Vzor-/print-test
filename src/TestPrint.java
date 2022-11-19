@@ -94,7 +94,7 @@ public class TestPrint {
     }
 
     private static PageFormat generatePage(int width, int height, int orientation) {
-        PageFormat page = new PageFormatFix();
+        PageFormat page = new PageFormat();
         page.setOrientation(orientation);
 
         Paper paper = page.getPaper();
@@ -125,13 +125,15 @@ public class TestPrint {
 
         @Override
         public int print(Graphics g, PageFormat pageFormat, int pageIndex) {
-            PageFormatFix pageFormatFix = (PageFormatFix) pageFormat;
-            if (pageFormatFix.needsRotation()) {
-                Graphics2D g2d = (Graphics2D)g;
-                //todo imageable x,y should likely be used instead of 0,0
-                g2d.rotate(Math.toRadians(-90), 0, 0);
-                g2d.translate(-pageFormatFix.getHeight(),0);
-            }
+//            PageFormatFix pageFormatFix = (PageFormatFix) pageFormat;
+//            if (pageFormatFix.needsRotation()) {
+//                Graphics2D g2d = (Graphics2D)g;
+//                //todo imageable x,y should likely be used instead of 0,0
+//                g2d.rotate(Math.toRadians(-90), 0, 0);
+//                g2d.translate(-pageFormatFix.getHeight(),0);
+//            }
+//            displayImg(generateImage("image" + pageIndex, g.getClipBounds().width, g.getClipBounds().height));
+//            g.setClip(0,0,40,96);
             g.drawImage(
                     //todo imageable x,y should likely be used instead of 0,0
                     generateImage("image" + pageIndex, g.getClipBounds().width, g.getClipBounds().height),
